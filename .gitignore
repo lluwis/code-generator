@@ -1,0 +1,15 @@
+noah-base.iml
+logs/*
+noah-server/noah-server.iml
+noah-server/target/*
+
+noah-service/noah-service.iml
+noah-service/target/*
+
+noah-web/noah-web.iml
+noah-web/target/*
+.idea/*
+config/*
+disconf/*
+noah-web/config/*
+noah-web/disconf/*
