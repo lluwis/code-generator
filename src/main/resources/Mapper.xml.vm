@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="${projectPackage}.dao.${table.className}Mapper">
+    <sql id="baseColumnList">
+#foreach($column in $table.columns)
+        ${column.attrName}#if($velocityCount != $table.columns.size()),#end
+
+#end
+    </sql>
+
+    <sql id="baseColumnListWithoutPri">
+#foreach($column in $table.columnsWithoutPri)
+        ${column.columnName}#if($velocityCount != $table.columnsWithoutPri.size()),#end
+
+#end
+    </sql>
+
+    <sql id="saveValues">
+#foreach($column in $table.columnsWithoutPri)
+        #{${column.attrName}}#if($velocityCount != $table.columnsWithoutPri.size()),#end
+
+#end
+    </sql>
+
+    <sql id="whereValues">
+#foreach($column in $table.columnsWithoutPri)
+        <if test="query.${column.attrName} != null ">
+            and ${column.columnName}=#{query.${column.attrName}}
+        </if>
+#end
+#foreach($column in $table.columns)
+#if(${column.columnType}=='datetime' || ${column.columnType}=='timestamp')
+        <if test="query.${column.attrName}Begin != null ">
+            and ${column.columnName} &gt;= #{query.${column.attrName}Begin}
+        </if>
+        <if test="query.${column.attrName}End != null ">
+            and ${column.columnName} &lt;= concat(#{query.${column.attrName}End},' 23:59:59')
+        </if>
+#end
+#end
+    </sql>
+
+    <sql id="pageValues">
+        limit #{page.startIndex},#{page.pageSize}
+    </sql>
+
+    <sql id="setValues">
+#foreach($column in $table.columnsWithoutPri)
+#if(${column.columnType}!="timestamp")
+      <if test="${column.attrName} != null">
+            ${column.attrName}=#{${column.attrName}},
+      </if>
+#end
+#end
+    </sql>
+
+    <insert id="save">
+        insert into ${table.tableName}
+        (<include refid="baseColumnListWithoutPri"/>)
+        VALUES
+        (<include refid="saveValues"/>)
+    </insert>
+
+#foreach($uniqueColumn in $table.uniqueColumns)
+    <select id="queryBy${uniqueColumn.capitalAttrName}" resultType="${table.className}">
+        select
+        <include refid="baseColumnList"/>
+        FROM
+        ${table.tableName}
+        where ${uniqueColumn.columnName}=#{${uniqueColumn.attrName}}
+    </select>
+
+#end
+
+#foreach($uniqueColumn in $table.uniqueColumns)
+    <update id="updateBy${uniqueColumn.capitalAttrName}">
+        update ${table.tableName}
+        <set>
+            <include refid="setValues"/>
+        </set>
+        where ${uniqueColumn.columnName}=#{${uniqueColumn.attrName}}
+    </update>
+#end
+
+    <select id="queryPageList" resultType="${table.className}">
+        select
+        <include refid="baseColumnList"/>
+        FROM
+        ${table.tableName}
+        where 1=1
+        <if test="query!=null">
+            <include refid="whereValues"/>
+        </if>
+        <if test=" page!=null ">
+            <include refid="pageValues"/>
+        </if>
+    </select>
+
+    <select id="queryPageCount" resultType="int">
+        select
+        count(1)
+        FROM
+        ${table.tableName}
+        where 1=1
+        <if test="query!=null">
+            <include refid="whereValues"/>
+        </if>
+    </select>
+
+
+</mapper>

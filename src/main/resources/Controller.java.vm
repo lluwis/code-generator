@@ -1,0 +1,120 @@
+package ${packageName};
+
+import org.springframework.beans.factory.annotation.Autowired;
+import ${projectPackage}.export.vo.${table.className};
+import ${projectPackage}.dao.${table.className}Mapper;
+import org.springframework.stereotype.Controller;
+import ${projectPackage}.export.request.Page;
+import ${projectPackage}.export.request.PageQuery;
+import ${projectPackage}.export.response.R;
+import java.util.*;
+
+import org.springframework.dao.DuplicateKeyException;
+
+
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/api/${table.unCapitalClassName}")
+public class ${table.className}Controller{
+
+    @Autowired
+    private ${table.className}Mapper ${table.unCapitalClassName}Mapper;
+
+    /**
+     * 分页查询列表
+     * @param page
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("/list")
+    public R list(Page page,${table.className} reqVo){
+        PageQuery<${table.className}> pageQuery=new PageQuery<${table.className}>();
+        pageQuery.setQuery(reqVo);
+        if(page==null){
+            page=new Page();
+        }
+        pageQuery.setPage(page);
+        List<${table.className}> list=${table.unCapitalClassName}Mapper.queryPageList(pageQuery);
+
+        Map<String,Integer> pageMap=new HashMap<String,Integer>();
+        if(list==null||list.size()==0){
+            list=new ArrayList();
+            pageMap.put("totalCount",0);
+        } else {
+            int totalCount=${table.unCapitalClassName}Mapper.queryPageCount(pageQuery);
+            pageMap.put("totalCount",totalCount);
+        }
+
+        pageMap.put("pageNo",page.getPageNo());
+        pageMap.put("pageSize",page.getPageSize());
+        return R.success().put("list",list).put("page",pageMap);
+    }
+
+    /**
+     * 根据ID查询单个记录
+     * @param id
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("/{id}")
+    public R queryById(@PathVariable("id") Long id){
+        ${table.className} ${table.unCapitalClassName}=${table.unCapitalClassName}Mapper.queryById(id);
+        if(${table.unCapitalClassName}==null){
+            return R.fail("未查询到记录");
+        }
+        return R.success().put("value",${table.unCapitalClassName});
+    }
+
+    /**
+     * 保存记录
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("/save")
+    public R save(${table.ClassName} ${table.unCapitalClassName}){
+        try{
+            ${table.unCapitalClassName}Mapper.save(${table.unCapitalClassName});
+            return R.success();
+        } catch (DuplicateKeyException e){
+            return R.success("重复插入");
+        } catch (Exception e){
+            return R.fail("保存失败："+e.getMessage());
+        }
+
+    }
+
+    /**
+     * 更新记录
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("/update")
+    public R update(${table.ClassName} ${table.unCapitalClassName}){
+        try{
+            int result= ${table.unCapitalClassName}Mapper.updateById(${table.unCapitalClassName});
+            if(result>0){
+                return R.success();
+            }
+            return R.fail("更新失败，未找到对应记录");
+        } catch (Exception e){
+            return R.fail("更新异常："+e.getMessage());
+        }
+
+    }
+
+    /**
+     * 保存或者更新，根据传入的参数是否包含id进行判断
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("/saveOrUpdate")
+    public R saveOrUpdate(${table.ClassName} ${table.unCapitalClassName}){
+        if(${table.unCapitalClassName}.getId()!=null){
+            return this.update(${table.unCapitalClassName});
+        } else{
+            return this.save(${table.unCapitalClassName});
+        }
+    }
+}

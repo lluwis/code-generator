@@ -1,0 +1,79 @@
+<html>
+<head>
+    <title>${table.comment}</title>
+    \#parse("header.html")
+</head>
+<body>
+<div id="rrapp">
+    <div class="form-horizontal" style="width: auto; padding: 20px;">
+
+#foreach($column in $table.indexColumns)
+#if($velocityCount%3==1)
+
+            <div class="form-group" style="margin-top: 30px;">
+#end
+
+                <label class="col-md-1 control-label #if($velocityCount%3==1)col-md-offset-1#end">${column.comment}：</label>
+#if(${column.columnType}=='datetime' || ${column.columnType}=='timestamp')
+                <div class="col-md-2">
+                    <div class="input-group">
+                        <input type="text" class="form-control datepiker" v-model="params.${column.attrName}Begin" name="${column.attrName}Begin">
+                        <span class="input-group-addon">to</span>
+                        <input type="text" class="form-control datepiker" v-model="params.${column.attrName}End" name="${column.attrName}End">
+                    </div>
+                </div>
+#elseif(${column.select}==true)
+                <div class="col-md-2">
+                    <select v-model="params.${column.attrName}" class="form-control">
+                        <option value="">请选择</option>
+                        <option v-for="(value,key) in dic.#if(${column.attrName}=="status")${table.unCapitalClassName}Status#else${column.attrName}#end" :value="key">{{value}}</option>
+                    </select>
+                </div>
+#else
+                <div class="col-md-2">
+                    <input name="${column.attrName}" v-model="params.${column.attrName}" class="form-control">
+                </div>
+#end
+#if($velocityCount%3==0 || $velocityCount==$table.indexColumns.size())
+            </div>
+#end
+#end
+
+        <div class="form-group" style="margin-top: 30px;">
+            <div class="col-md-offset-5">
+                <button type="button" class="btn btn-primary" @click="requestRefreshPageNo">查询</button>
+                <button class="btn btn-success" type="button" @click="create">新增</button>
+            </div>
+        </div>
+
+        <table cellpadding="0" cellspacing="0" border="0"
+               class="table table-hover table-striped table-bordered  table-condensed">
+            <tr>
+#foreach($column in $table.indexColumns)
+                <th>${column.comment}</th>
+#end
+                <th>操作</th>
+            </tr>
+            <tr v-for="item in itemList">
+#foreach($column in $table.indexColumns)
+                <td>{{item.${column.attrName}}}</td>
+#end
+                <td>
+                    <a class="btn btn-xs btn-info" href="javascript:void(0);" @click="detail(item.id)" :id="item.id">详情</a>
+                    <a class="btn btn-xs btn-danger" href="javascript:void(0);" @click="update(item.id)" :id="item.id">修改</a>
+                </td>
+            </tr>
+        </table>
+        <!--</div>-->
+
+        <div class="M-box m-style">
+        </div>
+        <p class="tips">
+            总数据<span class="count">{{params.totalCount}}</span>条，每页显示<span class="count">{{params.pageSize}}</span>条，总页数为<span class="count">{{params.totalPage}}</span>页
+    </div>
+</div>
+<script src="/js/${table.unCapitalClassName}.js"></script>
+</body>
+</html>
+
+

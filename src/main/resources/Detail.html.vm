@@ -1,0 +1,47 @@
+<html>
+<head>
+    <title>${table.comment}</title>
+    \#parse("header.html")
+</head>
+<body>
+
+<div id="rrapp">
+    <input style="display: none;" name="${table.pri.attrName}" v-model="value.${table.pri.attrName}" class="form-control">
+    <div class="form-horizontal" style="width: auto; padding: 20px;">
+#foreach($column in $table.columnsWithoutPri)
+#if($velocityCount%3==1)
+        <div class="form-group" style="margin-top: 30px;">
+#end
+
+            <label class="col-md-1 control-label #if($velocityCount%3==1)col-md-offset-1#end">#if(${column.nullable}==false)<span style="color: red">*</span>#end${column.comment}：</label>
+#if(${column.select}==true)
+            <div class="col-md-2">
+                <select v-model="value.${column.attrName}" class="form-control">
+                    <option v-for="(value,key) in dic.#if(${column.attrName}=="status")${table.unCapitalClassName}Status#else${column.attrName}#end" :value="key">{{value}}</option>
+                </select>
+            </div>
+#elseif(${column.columnType}=='datetime' || ${column.columnType}=='timestamp')
+            <div class="col-md-2">
+                <input type="text" class="form-control datepiker" v-model="value.${column.attrName}" name="${column.attrName}">
+            </div>
+#else
+            <div class="col-md-2">
+                <input name="${column.attrName}" v-model="value.${column.attrName}" class="form-control">
+            </div>
+#end
+
+#if($velocityCount%3==0 || $velocityCount==$table.columnsWithoutPri.size())
+        </div>
+#end
+
+#end
+        <div class="form-group" v-if="buttonSeen" style="margin-top: 30px;">
+            <div class="col-md-offset-5">
+                <button class="btn btn-success" type="button" @click="operate">{{buttonName}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/${table.unCapitalClassName}Detail.js"></script>
+</body>
+</html>

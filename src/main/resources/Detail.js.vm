@@ -1,0 +1,119 @@
+
+var operateType= T.p("operateType");
+var id= T.p("id");
+var vm = new Vue({
+    el:'#rrapp',
+
+    data:{
+        notNull: {
+#foreach($column in $table.columnsWithoutPri)
+#if(${column.nullable}==false)
+            "${column.attrName}": "${column.comment}",
+#end
+#end
+        },
+        dic:{},
+        buttonSeen:true,
+        operateType:operateType,
+        buttonName:"",
+        user:{},
+        value:{},
+        content:""
+    },
+    methods: {
+        request: function () {
+            var self =this;
+            $.getJSON("/api/${table.unCapitalClassName}/"+id,{}, function (r) {
+                self.value= r.value;
+            });
+        },
+        operate:function(){
+            if(this.checkNull()==false){
+                return;
+            }
+            var url;
+            if(operateType=="create"){
+                url="/api/${table.unCapitalClassName}/save";
+            }else {
+                url="/api/${table.unCapitalClassName}/update";
+            }
+            $.getJSON(url,this.filterParam(this.value),function(r){
+                if(r.code=="0"){
+                    alert("操作成功");
+                }else{
+                    alert("操作失败："+ r.msg)
+                }
+            });
+        },
+        filterParam:function(p){
+            for(var key in p){
+                if(p[key]==null||p[key]==""){
+                    delete p[key];
+                }
+            }
+            return p;
+        },
+        loadDic:function(){
+            var self=this;
+            $.getJSON("../js/dic.json",function(data){
+                self.dic=data;
+            });
+        },
+        checkNull:function(){
+            var object=this.notNull;
+            for(var key in object){
+                if(this.value[key]==null||this.value[key]===""){
+                    alert(object[key]+"不允许为空");
+                    return false;
+                }
+            }
+            return true;
+        },
+        disableInput:function(){
+            $("input").attr("disabled","disabled").css("background-color","white");
+            $("select").attr("disabled","disabled").css("background-color","white");
+        },
+        parseDic:function(){
+            var item=this.value;
+#foreach($column in $table.columns)
+#if(${column.select}==true)
+#if(${column.attrName}=="status")
+            item.${column.attrName}=self.dic.${table.unCapitalClassName}Status[item.${column.attrName}];
+#else
+            item.${column.attrName}=self.dic.${column.attrName}[item.${column.attrName}];
+#end
+#end
+#end
+        }
+    },
+    created: function () {
+        var self=this;
+        self.loadDic();
+        if(operateType=="create"){
+            self.buttonName="新增";
+        } else if(operateType=="detail"){
+            self.buttonSeen=false;
+            self.request();
+            self.disableInput();
+        } else if(operateType=="update"){
+            self.buttonName="修改";
+            self.request();
+        }
+    },
+    mounted:function(){
+        var self=this;
+        $(".datepiker").datetimepicker({
+            format: 'yyyy-mm-dd HH:mm:ss',//显示格式
+            todayHighlight: 1,//今天高亮
+            startView:2,
+            minView:0,  //选择到秒
+            forceParse: 0,
+            language:"zh-CN",
+            autoclose: 1//选择后自动关闭
+        }).on('hide', function (ev) { //添加监听事件，将日期选择器的值同步绑定
+            self.value[$(this).attr("name")]=$(this).val();
+        });
+    }
+});
+
+

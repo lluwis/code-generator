@@ -1,0 +1,114 @@
+var vm = new Vue({
+    el:'#rrapp',
+
+    data:{
+        dic:{},
+        user:{},
+        itemList:{},
+        params:{},
+        content:""
+    },
+    methods: {
+        request: function () {
+            var self =this;
+            $.getJSON("/api/${table.unCapitalClassName}/list",self.filterParam(self.params), function (r) {
+                self.itemList= r.list;
+                self.parseDic();
+                self.initPage(r.page);
+            });
+        },
+        requestRefreshPageNo:function(){
+            this.params.pageNo=1;
+            this.request();
+        },
+        create:function(){
+            var url="/sys/${table.unCapitalClassName}Detail?operateType=create";
+            var option={'height':800,'id':"新增${table.comment}","url":url,title:"新增${table.comment}"};
+            addTab(option);
+        },
+        initPage: function (o) {
+            var self=this;
+            self.params.totalCount= o.totalCount;
+            self.params.totalPage=Math.ceil(parseInt(o.totalCount) / self.params.pageSize);
+            $('.M-box').pagination({
+                totalData: o.totalCount,
+                showData: o.pageSize,
+                current: o.pageNo,
+                mode:"fixed",
+                homePage:"首页",
+                endPage:"末页",
+                coping:true,
+                jump:true,
+                callback: function (api) {
+                    self.params.pageNo=api.getCurrent();
+                    self.request();
+                }
+            });
+        },
+        detail:function(o){
+            var id=o;
+            var url="/sys/${table.unCapitalClassName}Detail?operateType=detail&id="+o;
+            var option={'height':800,'id':"${table.comment}详情"+id,"url":url,title:"${table.comment}详情"+id};
+            addTab(option);
+        },
+        update:function(o){
+            var id=o;
+            var url="/sys/${table.unCapitalClassName}Detail?operateType=update&id="+o;
+            var option={'height':800,'id':"修改${table.comment}"+id,"url":url,title:"修改${table.comment}"+id};
+            addTab(option);
+        },
+        filterParam:function(p){
+            for(var key in p){
+                if(p[key]==null||p[key]==""){
+                    delete p[key];
+                }
+            }
+            return p;
+        },
+        loadDic:function(){
+            var self=this;
+            $.getJSON("../js/dic.json",function(data){
+                self.dic=data;
+            });
+        },
+        parseDic:function(){
+            var self=this;
+            self.itemList.forEach(function(item){
+#foreach($column in $table.columns)
+#if(${column.select}==true)
+#if(${column.attrName}=="status")
+                item.${column.attrName}=self.dic.${table.unCapitalClassName}Status[item.${column.attrName}];
+#else
+                item.${column.attrName}=self.dic.${column.attrName}[item.${column.attrName}];
+#end
+#end
+#end
+            });
+        }
+
+    },
+    created: function () {
+        var self=this;
+        self.loadDic();
+
+    },
+    mounted:function(){
+        var self=this;
+        $(".datepiker").datetimepicker({
+            format: 'yyyy-mm-dd',//显示格式
+            todayHighlight: 1,//今天高亮
+            startView:2,
+            minView:2,  //选择到日
+            forceParse: 0,
+            language:"zh-CN",
+            autoclose: 1//选择后自动关闭
+        }).on('hide', function (ev) { //添加监听事件，将日期选择器的值同步绑定
+            self.params[$(this).attr("name")]=$(this).val();
+        });
+        self.params={pageNo:1,pageSize:10};
+        self.request();
+
+    }
+});
+
+

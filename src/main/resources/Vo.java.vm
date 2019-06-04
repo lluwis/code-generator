@@ -1,0 +1,64 @@
+package ${packageName};
+import java.io.Serializable;
+#foreach($import in $table.imports)
+import ${import};
+#end
+
+public class ${table.className} implements Serializable{
+#foreach($column in $table.columns)
+#if($column.comment != '')
+    /**
+     * ${column.comment}
+     */
+#end
+    private ${column.attrType} ${column.attrName};
+
+#end
+
+
+#foreach($column in $table.columns)
+#if(${column.columnType}=='datetime' || ${column.columnType}=='timestamp')
+    /**
+     * ${column.attrName}起始
+     */
+    private ${column.attrType} ${column.attrName}Begin;
+
+    /**
+     * ${column.attrName}终止
+     */
+    private ${column.attrType} ${column.attrName}End;
+#end
+#end
+
+#foreach($column in $table.columns)
+    public void set${column.capitalAttrName}(${column.attrType} ${column.attrName}){
+        this.${column.attrName}=${column.attrName};
+    }
+
+    public ${column.attrType} get${column.capitalAttrName}(){
+        return this.${column.attrName};
+    }
+
+#end
+
+#foreach($column in $table.columns)
+#if(${column.columnType}=='datetime' || ${column.columnType}=='timestamp')
+    public void set${column.capitalAttrName}Begin(${column.attrType} ${column.attrName}Begin){
+        this.${column.attrName}Begin=${column.attrName}Begin;
+    }
+
+    public ${column.attrType} get${column.capitalAttrName}Begin(){
+        return this.${column.attrName}Begin;
+    }
+
+    public void set${column.capitalAttrName}End(${column.attrType} ${column.attrName}End){
+        this.${column.attrName}End=${column.attrName}End;
+    }
+
+    public ${column.attrType} get${column.capitalAttrName}End(){
+        return this.${column.attrName}End;
+    }
+#end
+#end
+
+}
